@@ -21,7 +21,7 @@ st.markdown("""
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Ana Arka Plan ve Yumuşak Işıltı */
+/* Ana Arka Plan */
 .stApp {
     background: linear-gradient(135deg, #FDFBFB 0%, #EBEDEE 100%);
 }
@@ -34,7 +34,7 @@ st.markdown("""
 }
 
 .gradient-title {
-    font-size: 2.4rem;
+    font-size: 2.3rem;
     font-weight: 800;
     background: linear-gradient(-45deg, #FF6B8B, #FF8E53, #9B51E0, #6C5CE7, #FD79A8);
     background-size: 300% 300%;
@@ -90,38 +90,39 @@ st.markdown("""
 .card-blue { background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%); }
 .card-sunset { background: linear-gradient(135deg, #FA709A 0%, #FEE140 100%); }
 
-/* Canlı Gönder Butonu */
+/* Buton Tasarımı */
 .stButton > button {
     background: linear-gradient(135deg, #FF6B8B 0%, #9B51E0 100%) !important;
     color: white !important;
     font-weight: 700 !important;
-    font-size: 1.1rem !important;
+    font-size: 1.05rem !important;
     border: none !important;
     border-radius: 14px !important;
-    padding: 14px 28px !important;
+    padding: 12px 24px !important;
     box-shadow: 0 10px 20px -5px rgba(255, 107, 139, 0.4) !important;
     transition: all 0.3s ease !important;
 }
 
 .stButton > button:hover {
-    transform: translateY(-3px) scale(1.01) !important;
+    transform: translateY(-2px) scale(1.01) !important;
     box-shadow: 0 15px 25px -5px rgba(155, 81, 224, 0.5) !important;
 }
 
-/* Şık Kart Çerçevesi */
-.glass-box {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
+/* Kilit Ekranı Kartı */
+.lock-box {
+    background: white;
     border-radius: 20px;
-    padding: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-    margin-bottom: 24px;
+    padding: 35px;
+    border: 2px solid #FFE3EC;
+    box-shadow: 0 15px 35px rgba(255, 107, 139, 0.08);
+    max-width: 550px;
+    margin: 20px auto;
+    text-align: center;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Supabase Bağlantı Bilgileri (Kalıcı ve Güvenli) ---
+# --- Supabase Bağlantı Bilgileri ---
 SUPABASE_URL = "https://zxysmzuquiuqahnfewly.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4eXNtenVxdWl1cWFobmZld2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTI0MDMsImV4cCI6MjEwNDE2ODQwM30.Rf2LnGHy4lad7YkK_Nz9kvyqtfYzMTp4LLy32UXv3sI"
 
@@ -142,7 +143,7 @@ supabase: Client = get_supabase_client(SUPABASE_URL, SUPABASE_KEY)
 st.sidebar.markdown("### 🌸 Platform Menüsü")
 sayfa = st.sidebar.radio(
     "Nereye gitmek istersin?",
-    ["📝 Gelir Bildir (Anket Formu)", "📊 Canlı & Renkli Analiz Paneli"]
+    ["📝 Gelir Bildir (Anket Formu)", "🔒 Yönetici Analiz Paneli"]
 )
 
 st.sidebar.markdown("---")
@@ -254,185 +255,225 @@ if sayfa == "📝 Gelir Bildir (Anket Formu)":
                     st.error(f"Kayıt eklenirken hata oluştu: {e}")
 
 # ==========================================
-# SAYFA 2: CANLI & RENKLİ ANALİZ PANELİ
+# SAYFA 2: YÖNETİCİYE ÖZEL ANALİZ PANELİ
 # ==========================================
-elif sayfa == "📊 Canlı & Renkli Analiz Paneli":
-    st.markdown('<div class="gradient-title">Canlı Finans & Gelir Trendleri 📊</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Katılımcılardan toplanan verilerle gerçek zamanlı üretilen dinamik içgörüler. ✨</div>', unsafe_allow_html=True)
+elif sayfa == "🔒 Yönetici Analiz Paneli":
+    # Oturum kontrolü
+    if "admin_logged_in" not in st.session_state:
+        st.session_state["admin_logged_in"] = False
 
-    if not supabase:
-        st.warning("⚠️ Veritabanı bağlantısı kurulamadı.")
+    # Giriş yapılmadıysa Şifre Ekranı
+    if not st.session_state["admin_logged_in"]:
+        st.markdown("""
+        <div class="lock-box">
+            <h2 style="color: #FF6B8B; margin-bottom: 10px;">🔒 Yönetici Girişi</h2>
+            <p style="color: #636E72; font-size: 0.95rem; margin-bottom: 25px;">
+                Bu analiz paneli ve sonuçlar yalnızca sistem yöneticisine özeldir. 
+                Görüntülemek için lütfen yönetici şifrenizi giriniz.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_a, col_b, col_c = st.columns([1, 2, 1])
+        with col_b:
+            with st.form("admin_login_form"):
+                admin_sifre = st.text_input("Yönetici Şifresi:", type="password", placeholder="Şifrenizi yazınız...")
+                giris_yap = st.form_submit_button("🔐 Panele Güvenli Giriş Yap", use_container_width=True)
+
+                if giris_yap:
+                    dogru_sifre = "ikra2026"
+                    if "admin_password" in st.secrets:
+                        dogru_sifre = st.secrets["admin_password"]
+
+                    if admin_sifre == dogru_sifre:
+                        st.session_state["admin_logged_in"] = True
+                        st.success("Giriş başarılı! Panel açılıyor... ✨")
+                        st.rerun()
+                    else:
+                        st.error("Hatalı şifre girdiniz!")
+
+    # Giriş yapıldıysa Dashboard'u Göster
     else:
-        try:
-            response = supabase.table("gelir_verileri").select("*").execute()
-            rows = response.data
+        top_col1, top_col2 = st.columns([5, 1])
+        with top_col1:
+            st.markdown('<div class="gradient-title">Canlı Finans & Gelir Trendleri 📊</div>', unsafe_allow_html=True)
+            st.markdown('<div class="sub-title">Yönetici Özel Görünümü: Katılımcılardan toplanan dinamik içgörüler. ✨</div>', unsafe_allow_html=True)
+        with top_col2:
+            if st.button("🔒 Güvenli Çıkış", use_container_width=True):
+                st.session_state["admin_logged_in"] = False
+                st.rerun()
 
-            if not rows:
-                st.markdown("""
-                <div style='background: white; border-radius: 20px; padding: 40px; text-align: center; border: 2px dashed #FF8E53; margin-top: 20px;'>
-                    <h2 style='color: #FF6B8B;'>🌸 Veri Havuzu Henüz Tertemiz!</h2>
-                    <p style='color: #636E72; font-size: 1.1rem;'>Veritabanındaki tüm eski test verileri silindi. Formu ilk dolduran sen veya arkadaşların olabilir! ✨</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                df = pd.DataFrame(rows)
-                df["aylik_net_gelir"] = pd.to_numeric(df["aylik_net_gelir"], errors="coerce")
-                df["pasif_gelir_tutari"] = pd.to_numeric(df["pasif_gelir_tutari"], errors="coerce").fillna(0)
+        if not supabase:
+            st.warning("⚠️ Veritabanı bağlantısı kurulamadı.")
+        else:
+            try:
+                response = supabase.table("gelir_verileri").select("*").execute()
+                rows = response.data
 
-                toplam_katilimci = len(df)
-                ort_gelir = df["aylik_net_gelir"].mean()
-                pasif_oran = (df["pasif_gelir_var_mi"].sum() / toplam_katilimci) * 100
-                ort_pasif = df[df["pasif_gelir_var_mi"] == True]["pasif_gelir_tutari"].mean() if pasif_oran > 0 else 0
-
-                # --- RENKLİ GRADIENT KPI KARTLARI ---
-                k1, k2, k3, k4 = st.columns(4)
-                with k1:
-                    st.markdown(f"""
-                    <div class="kpi-card card-pink">
-                        <div class="kpi-title">👥 Toplam Katılımcı</div>
-                        <div class="kpi-value">{toplam_katilimci:,}</div>
+                if not rows:
+                    st.markdown("""
+                    <div style='background: white; border-radius: 20px; padding: 40px; text-align: center; border: 2px dashed #FF8E53; margin-top: 20px;'>
+                        <h2 style='color: #FF6B8B;'>🌸 Veri Havuzu Henüz Tertemiz!</h2>
+                        <p style='color: #636E72; font-size: 1.1rem;'>Veritabanında henüz kayıtlı veri yok. Formu ilk dolduran sen veya arkadaşların olabilir! ✨</p>
                     </div>
                     """, unsafe_allow_html=True)
+                else:
+                    df = pd.DataFrame(rows)
+                    df["aylik_net_gelir"] = pd.to_numeric(df["aylik_net_gelir"], errors="coerce")
+                    df["pasif_gelir_tutari"] = pd.to_numeric(df["pasif_gelir_tutari"], errors="coerce").fillna(0)
 
-                with k2:
-                    st.markdown(f"""
-                    <div class="kpi-card card-purple">
-                        <div class="kpi-title">💵 Ort. Net Maaş</div>
-                        <div class="kpi-value">{ort_gelir:,.0f} ₺</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    toplam_katilimci = len(df)
+                    ort_gelir = df["aylik_net_gelir"].mean()
+                    pasif_oran = (df["pasif_gelir_var_mi"].sum() / toplam_katilimci) * 100
+                    ort_pasif = df[df["pasif_gelir_var_mi"] == True]["pasif_gelir_tutari"].mean() if pasif_oran > 0 else 0
 
-                with k3:
-                    st.markdown(f"""
-                    <div class="kpi-card card-blue">
-                        <div class="kpi-title">📈 Pasif Gelir Oranı</div>
-                        <div class="kpi-value">%{pasif_oran:.1f}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # --- RENKLİ GRADIENT KPI KARTLARI ---
+                    k1, k2, k3, k4 = st.columns(4)
+                    with k1:
+                        st.markdown(f"""
+                        <div class="kpi-card card-pink">
+                            <div class="kpi-title">👥 Toplam Katılımcı</div>
+                            <div class="kpi-value">{toplam_katilimci:,}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                with k4:
-                    st.markdown(f"""
-                    <div class="kpi-card card-sunset">
-                        <div class="kpi-title">💰 Ort. Pasif Gelir</div>
-                        <div class="kpi-value">{ort_pasif:,.0f} ₺</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    with k2:
+                        st.markdown(f"""
+                        <div class="kpi-card card-purple">
+                            <div class="kpi-title">💵 Ort. Net Maaş</div>
+                            <div class="kpi-value">{ort_gelir:,.0f} ₺</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                st.markdown("<br>", unsafe_allow_html=True)
+                    with k3:
+                        st.markdown(f"""
+                        <div class="kpi-card card-blue">
+                            <div class="kpi-title">📈 Pasif Gelir Oranı</div>
+                            <div class="kpi-value">%{pasif_oran:.1f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                # --- CANLI RENKLİ GRAFİKLER ---
-                g_col1, g_col2 = st.columns(2)
+                    with k4:
+                        st.markdown(f"""
+                        <div class="kpi-card card-sunset">
+                            <div class="kpi-title">💰 Ort. Pasif Gelir</div>
+                            <div class="kpi-value">{ort_pasif:,.0f} ₺</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                # Canlı Renk Paletleri
-                canli_renkler = ["#FF6B8B", "#A18CD1", "#4FACFE", "#FA709A", "#6C5CE7", "#00B894", "#FDCB6E", "#E17055"]
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-                with g_col1:
-                    st.markdown("#### 🏢 Sektörlere Göre Ortalama Gelir")
-                    sektor_df = df.groupby("sektor")["aylik_net_gelir"].mean().reset_index().sort_values("aylik_net_gelir", ascending=True)
-                    fig_sektor = px.bar(
-                        sektor_df,
-                        x="aylik_net_gelir",
-                        y="sektor",
-                        orientation="h",
-                        labels={"aylik_net_gelir": "Ortalama Net Gelir (TL)", "sektor": "Sektör"},
-                        color="aylik_net_gelir",
-                        color_continuous_scale="Sunset"
-                    )
-                    fig_sektor.update_layout(
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        font=dict(family="Plus Jakarta Sans", size=12),
-                        height=400,
-                        margin=dict(l=10, r=10, t=20, b=20)
-                    )
-                    st.plotly_chart(fig_sektor, use_container_width=True)
+                    # --- CANLI RENKLİ GRAFİKLER ---
+                    g_col1, g_col2 = st.columns(2)
+                    canli_renkler = ["#FF6B8B", "#A18CD1", "#4FACFE", "#FA709A", "#6C5CE7", "#00B894", "#FDCB6E", "#E17055"]
 
-                with g_col2:
-                    st.markdown("#### 🥧 Pasif Gelir Kaynakları Dağılımı")
-                    kaynaklar_listesi = []
-                    for k in df[df["pasif_gelir_var_mi"] == True]["pasif_gelir_kaynagi"].dropna():
-                        for item in str(k).split(","):
-                            temiz = item.strip().replace("📈", "").replace("🏠", "").replace("🏦", "").replace("🪙", "").replace("💻", "").replace("⚡", "").replace("✨", "").strip()
-                            if temiz:
-                                kaynaklar_listesi.append(temiz)
-
-                    if kaynaklar_listesi:
-                        kaynak_df = pd.Series(kaynaklar_listesi).value_counts().reset_index()
-                        kaynak_df.columns = ["Kaynak", "Adet"]
-                        fig_kaynak = px.pie(
-                            kaynak_df,
-                            names="Kaynak",
-                            values="Adet",
-                            hole=0.45,
-                            color_discrete_sequence=canli_renkler
+                    with g_col1:
+                        st.markdown("#### 🏢 Sektörlere Göre Ortalama Gelir")
+                        sektor_df = df.groupby("sektor")["aylik_net_gelir"].mean().reset_index().sort_values("aylik_net_gelir", ascending=True)
+                        fig_sektor = px.bar(
+                            sektor_df,
+                            x="aylik_net_gelir",
+                            y="sektor",
+                            orientation="h",
+                            labels={"aylik_net_gelir": "Ortalama Net Gelir (TL)", "sektor": "Sektör"},
+                            color="aylik_net_gelir",
+                            color_continuous_scale="Sunset"
                         )
-                        fig_kaynak.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#FFFFFF', width=2)))
-                        fig_kaynak.update_layout(
+                        fig_sektor.update_layout(
                             plot_bgcolor="rgba(0,0,0,0)",
                             paper_bgcolor="rgba(0,0,0,0)",
-                            font=dict(family="Plus Jakarta Sans"),
+                            font=dict(family="Plus Jakarta Sans", size=12),
                             height=400,
                             margin=dict(l=10, r=10, t=20, b=20)
                         )
-                        st.plotly_chart(fig_kaynak, use_container_width=True)
-                    else:
-                        st.info("Henüz pasif gelir kaynağı verisi eklenmedi.")
+                        st.plotly_chart(fig_sektor, use_container_width=True)
 
-                g_col3, g_col4 = st.columns(2)
+                    with g_col2:
+                        st.markdown("#### 🥧 Pasif Gelir Kaynakları Dağılımı")
+                        kaynaklar_listesi = []
+                        for k in df[df["pasif_gelir_var_mi"] == True]["pasif_gelir_kaynagi"].dropna():
+                            for item in str(k).split(","):
+                                temiz = item.strip().replace("📈", "").replace("🏠", "").replace("🏦", "").replace("🪙", "").replace("💻", "").replace("⚡", "").replace("✨", "").strip()
+                                if temiz:
+                                    kaynaklar_listesi.append(temiz)
 
-                with g_col3:
-                    st.markdown("#### 🎂 Yaş Gruplarına Göre Gelir Dağılımı")
-                    yas_sirasi = ["18-24", "25-34", "35-44", "45-54", "55+"]
-                    yas_df = df.groupby("yas_grubu")["aylik_net_gelir"].mean().reindex(yas_sirasi).dropna().reset_index()
-                    fig_yas = px.bar(
-                        yas_df,
-                        x="yas_grubu",
-                        y="aylik_net_gelir",
-                        labels={"yas_grubu": "Yaş Grubu", "aylik_net_gelir": "Ortalama Gelir (TL)"},
-                        color="aylik_net_gelir",
-                        color_continuous_scale="Purp"
+                        if kaynaklar_listesi:
+                            kaynak_df = pd.Series(kaynaklar_listesi).value_counts().reset_index()
+                            kaynak_df.columns = ["Kaynak", "Adet"]
+                            fig_kaynak = px.pie(
+                                kaynak_df,
+                                names="Kaynak",
+                                values="Adet",
+                                hole=0.45,
+                                color_discrete_sequence=canli_renkler
+                            )
+                            fig_kaynak.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#FFFFFF', width=2)))
+                            fig_kaynak.update_layout(
+                                plot_bgcolor="rgba(0,0,0,0)",
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                font=dict(family="Plus Jakarta Sans"),
+                                height=400,
+                                margin=dict(l=10, r=10, t=20, b=20)
+                            )
+                            st.plotly_chart(fig_kaynak, use_container_width=True)
+                        else:
+                            st.info("Henüz pasif gelir kaynağı verisi eklenmedi.")
+
+                    g_col3, g_col4 = st.columns(2)
+
+                    with g_col3:
+                        st.markdown("#### 🎂 Yaş Gruplarına Göre Gelir Dağılımı")
+                        yas_sirasi = ["18-24", "25-34", "35-44", "45-54", "55+"]
+                        yas_df = df.groupby("yas_grubu")["aylik_net_gelir"].mean().reindex(yas_sirasi).dropna().reset_index()
+                        fig_yas = px.bar(
+                            yas_df,
+                            x="yas_grubu",
+                            y="aylik_net_gelir",
+                            labels={"yas_grubu": "Yaş Grubu", "aylik_net_gelir": "Ortalama Gelir (TL)"},
+                            color="aylik_net_gelir",
+                            color_continuous_scale="Purp"
+                        )
+                        fig_yas.update_layout(
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            font=dict(family="Plus Jakarta Sans"),
+                            height=360,
+                            margin=dict(l=10, r=10, t=20, b=20)
+                        )
+                        st.plotly_chart(fig_yas, use_container_width=True)
+
+                    with g_col4:
+                        st.markdown("#### 📍 En Çok Katılım Olan Şehirler")
+                        il_df = df["sehir"].value_counts().head(5).reset_index()
+                        il_df.columns = ["Şehir", "Katılımcı Sayısı"]
+                        fig_il = px.bar(
+                            il_df,
+                            x="Şehir",
+                            y="Katılımcı Sayısı",
+                            color="Katılımcı Sayısı",
+                            color_continuous_scale="Tealgrn"
+                        )
+                        fig_il.update_layout(
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            font=dict(family="Plus Jakarta Sans"),
+                            height=360,
+                            margin=dict(l=10, r=10, t=20, b=20)
+                        )
+                        st.plotly_chart(fig_il, use_container_width=True)
+
+                    # --- GELİŞMİŞ VE RENKLİ VERİ TABLOSU ---
+                    st.markdown("---")
+                    st.markdown("#### 📋 Anonim Katılımcı Havuzu (Filtrelenebilir)")
+                    secilen_sektor = st.selectbox("Sektöre Göre Filtrele:", ["Tümü ✨"] + list(df["sektor"].unique()))
+                    filtreli_df = df if secilen_sektor == "Tümü ✨" else df[df["sektor"] == secilen_sektor]
+                    
+                    gosterim_kolonlari = ["sehir", "ilce", "sektor", "meslek", "tecrube_yili", "aylik_net_gelir", "pasif_gelir_var_mi", "pasif_gelir_tutari", "pasif_gelir_kaynagi"]
+                    st.dataframe(
+                        filtreli_df[gosterim_kolonlari].sort_values("aylik_net_gelir", ascending=False),
+                        use_container_width=True,
+                        hide_index=True
                     )
-                    fig_yas.update_layout(
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        font=dict(family="Plus Jakarta Sans"),
-                        height=360,
-                        margin=dict(l=10, r=10, t=20, b=20)
-                    )
-                    st.plotly_chart(fig_yas, use_container_width=True)
 
-                with g_col4:
-                    st.markdown("#### 📍 En Çok Katılım Olan Şehirler")
-                    il_df = df["sehir"].value_counts().head(5).reset_index()
-                    il_df.columns = ["Şehir", "Katılımcı Sayısı"]
-                    fig_il = px.bar(
-                        il_df,
-                        x="Şehir",
-                        y="Katılımcı Sayısı",
-                        color="Katılımcı Sayısı",
-                        color_continuous_scale="Tealgrn"
-                    )
-                    fig_il.update_layout(
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        font=dict(family="Plus Jakarta Sans"),
-                        height=360,
-                        margin=dict(l=10, r=10, t=20, b=20)
-                    )
-                    st.plotly_chart(fig_il, use_container_width=True)
-
-                # --- GELİŞMİŞ VE RENKLİ VERİ TABLOSU ---
-                st.markdown("---")
-                st.markdown("#### 📋 Anonim Katılımcı Havuzu (Filtrelenebilir)")
-                secilen_sektor = st.selectbox("Sektöre Göre Filtrele:", ["Tümü ✨"] + list(df["sektor"].unique()))
-                filtreli_df = df if secilen_sektor == "Tümü ✨" else df[df["sektor"] == secilen_sektor]
-                
-                gosterim_kolonlari = ["sehir", "ilce", "sektor", "meslek", "tecrube_yili", "aylik_net_gelir", "pasif_gelir_var_mi", "pasif_gelir_tutari", "pasif_gelir_kaynagi"]
-                st.dataframe(
-                    filtreli_df[gosterim_kolonlari].sort_values("aylik_net_gelir", ascending=False),
-                    use_container_width=True,
-                    hide_index=True
-                )
-
-        except Exception as e:
-            st.error(f"Veriler çekilirken hata oluştu: {e}")
+            except Exception as e:
+                st.error(f"Veriler çekilirken hata oluştu: {e}")
